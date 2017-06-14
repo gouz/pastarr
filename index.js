@@ -37,9 +37,9 @@ nightmare
         wallpaper.set(search + ".png", {
           scale: "fill"
         }).then(function() {
-          fs.unlink(search + '.png', function() {
+          //fs.unlink(search + '.png', function() {
             console.log('done!')
-          })
+          //})
         })
       })
   })
