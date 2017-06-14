@@ -2,7 +2,7 @@
 'use strict';
 const program = require('commander');
 program
-  .version('0.0.3')
+  .version('0.0.4')
   .parse(process.argv);
 
 const wallpaper = require('wallpaper');
@@ -22,7 +22,7 @@ let download = function(uri, filename, callback){
 
 let url = "https://www.google.fr/search?q="
         + search
-        + "&biw=1366&bih=658&tbs=islt:2mp,itp:photo,qdr:d,isz:ex,iszw:1920,iszh:1080&tbm=isch&source=lnt";
+        + "&biw=1366&bih=658&tbm=isch&source=lnt&tbs=isz:ex,iszw:1920,iszh:1080";
 
 nightmare
   .goto(url)
@@ -39,7 +39,7 @@ nightmare
   .end()
   .then(function(url) {
     const ext = url.substring(url.lastIndexOf('.'));
-    const uniq = (new Date()).toString();
+    const uniq = (new Date()).getTime();
     download(url, uniq + ext, function() {
         wallpaper.set(uniq + ext, {
           scale: "fill"
