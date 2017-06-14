@@ -4,13 +4,13 @@ Automatic wallpaper from cli
 ## installation
 
 ````
-npm install pastarr
+$ npm install -g pastarr
 ````
 
 ## use
 
 ````
-pastarr "assassin's creed"
+$ pastarr "assassin's creed"
 ````
 
 ## troubleshooting
