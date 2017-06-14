@@ -20,26 +20,32 @@ let download = function(uri, filename, callback){
   });
 };
 
-let url = "https://www.google.fr/search?q=" + search + "&biw=1366&bih=658&tbs=islt:2mp,itp:photo,qdr:d,isz:ex,iszw:1920,iszh:1080&tbm=isch&source=lnt";
+let url = "https://www.google.fr/search?q="
+        + search
+        + "&biw=1366&bih=658&tbs=islt:2mp,itp:photo,qdr:d,isz:ex,iszw:1920,iszh:1080&tbm=isch&source=lnt";
 
 nightmare
   .goto(url)
-  .click("a.rg_l")
-  .wait(1000)
+  .wait('a.rg_l')
+  .evaluate(function() {
+    const arr = document.querySelectorAll("a.rg_l");
+    arr[Math.floor(Math.random() * arr.length)].click();
+  })
   .evaluate(function() {
     return new Promise((resolve, reject) => {
-          resolve(document.querySelectorAll(".irc_fsl")[1].getAttribute("href"));
-     });
+      resolve(document.querySelectorAll(".irc_fsl")[1].getAttribute("href"));
+    });
   })
   .end()
   .then(function(url) {
-    download(url, search + '.png', function() {
-        wallpaper.set(search + ".png", {
+    const ext = url.substring(url.lastIndexOf('.'));
+    download(url, search + ext, function() {
+        wallpaper.set(search + ext, {
           scale: "fill"
         }).then(function() {
-          //fs.unlink(search + '.png', function() {
-            console.log('done!')
-          //})
+          fs.unlink(search + ext, function() {
+            console.log('done !')
+          })
         })
       })
   })
