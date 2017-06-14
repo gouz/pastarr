@@ -2,7 +2,7 @@
 'use strict';
 const program = require('commander');
 program
-  .version('0.0.1')
+  .version('0.0.3')
   .parse(process.argv);
 
 const wallpaper = require('wallpaper');
@@ -39,11 +39,12 @@ nightmare
   .end()
   .then(function(url) {
     const ext = url.substring(url.lastIndexOf('.'));
-    download(url, search + ext, function() {
-        wallpaper.set(search + ext, {
+    const uniq = (new Date()).toString();
+    download(url, uniq + ext, function() {
+        wallpaper.set(uniq + ext, {
           scale: "fill"
         }).then(function() {
-          fs.unlink(search + ext, function() {
+          fs.unlink(uniq + ext, function() {
             console.log('done !')
           })
         })
