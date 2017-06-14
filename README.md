@@ -1,0 +1,2 @@
+# pastarr
+Automatic wallpaper
