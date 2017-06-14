@@ -1,0 +1,28 @@
+{
+  "name": "pastarr",
+  "version": "0.0.1",
+  "description": "desktop app to change wallpaper with random images from hashtag and site",
+  "main": "index.js",
+  "keywords": [
+    "wallpaper"
+  ],
+  "author": "Sylvain Gougouzian",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^2.9.0",
+    "nightmare": "^2.10.0",
+    "wallpaper": "^2.4.0"
+  },
+  "bin": {
+    "pastarr": "./index.js"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gouz/pastarr.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gouz/pastarr/issues"
+  },
+  "homepage": "https://github.com/gouz/pastarr#readme"
+}
