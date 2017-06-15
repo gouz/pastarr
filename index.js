@@ -1,22 +1,22 @@
 #!/usr/bin/env node
-'use strict';
-const program = require('commander');
+"use strict";
+const program = require("commander");
 program
-  .version('0.0.4')
+  .version("0.0.5")
   .parse(process.argv);
 
-const wallpaper = require('wallpaper');
-const Nightmare = require('nightmare');
+const wallpaper = require("wallpaper");
+const Nightmare = require("nightmare");
 let nightmare = Nightmare();
 
 const search = process.argv[2];
 
-let fs = require('fs');
-let request = require('request');
+let fs = require("fs");
+let request = require("request");
 
 let download = function(uri, filename, callback){
   request.head(uri, function(err, res, body){
-    request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
+    request(uri).pipe(fs.createWriteStream(filename)).on("close", callback);
   });
 };
 
@@ -26,11 +26,12 @@ let url = "https://www.google.fr/search?q="
 
 nightmare
   .goto(url)
-  .wait('a.rg_l')
+  .wait("a.rg_l")
   .evaluate(function() {
     const arr = document.querySelectorAll("a.rg_l");
     arr[Math.floor(Math.random() * arr.length)].click();
   })
+  .wait(".irc_fsl")
   .evaluate(function() {
     return new Promise((resolve, reject) => {
       resolve(document.querySelectorAll(".irc_fsl")[1].getAttribute("href"));
@@ -38,14 +39,14 @@ nightmare
   })
   .end()
   .then(function(url) {
-    const ext = url.substring(url.lastIndexOf('.'));
+    const ext = url.substring(url.lastIndexOf("."));
     const uniq = (new Date()).getTime();
     download(url, uniq + ext, function() {
         wallpaper.set(uniq + ext, {
           scale: "fill"
         }).then(function() {
           fs.unlink(uniq + ext, function() {
-            console.log('done !')
+            console.log("done !")
           })
         })
       })
