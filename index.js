@@ -2,52 +2,54 @@
 "use strict";
 const program = require("commander");
 program
-  .version("0.0.5")
+  .version("0.0.6")
   .parse(process.argv);
 
+const fs = require("fs");
+const request = require("request");
 const wallpaper = require("wallpaper");
 const Nightmare = require("nightmare");
 let nightmare = Nightmare();
 
 const search = process.argv[2];
 
-let fs = require("fs");
-let request = require("request");
-
-let download = function(uri, filename, callback){
-  request.head(uri, function(err, res, body){
-    request(uri).pipe(fs.createWriteStream(filename)).on("close", callback);
-  });
-};
-
 let url = "https://www.google.fr/search?q="
-        + search
-        + "&biw=1366&bih=658&tbm=isch&source=lnt&tbs=isz:ex,iszw:1920,iszh:1080";
+        + encodeURI(search)
+        + "&biw=1366&bih=658&tbm=isch&source=lnt&tbs=photo,isz:ex,iszw:1920,iszh:1080";
 
 nightmare
   .goto(url)
   .wait("a.rg_l")
-  .evaluate(function() {
+  .evaluate(() => {
     const arr = document.querySelectorAll("a.rg_l");
     arr[Math.floor(Math.random() * arr.length)].click();
   })
-  .wait(".irc_fsl")
-  .evaluate(function() {
-    return new Promise((resolve, reject) => {
-      resolve(document.querySelectorAll(".irc_fsl")[1].getAttribute("href"));
-    });
+  .wait(".irc_fsl[tabindex=\"0\"]")
+  .evaluate(() => {
+    return document.querySelector(".irc_fsl[tabindex=\"0\"]").getAttribute("href");
   })
   .end()
-  .then(function(url) {
-    const ext = url.substring(url.lastIndexOf("."));
-    const uniq = (new Date()).getTime();
-    download(url, uniq + ext, function() {
-        wallpaper.set(uniq + ext, {
-          scale: "fill"
-        }).then(function() {
-          fs.unlink(uniq + ext, function() {
-            console.log("done !")
-          })
-        })
-      })
-  })
+  .then((img) => {
+    if (img != "")
+    {
+      const ext = img.substring(img.lastIndexOf("."));
+      const uniq = (new Date()).getTime();
+      request.head(img, (err, res, body) => {
+        request(img)
+          .pipe(fs.createWriteStream(uniq + ext))
+          .on("close", () => {
+            wallpaper
+              .set(uniq + ext, {
+                scale: "fill"
+              })
+              .then(() => {
+                fs.unlink(uniq + ext, () => {
+                  console.log("done !");
+                });
+              });
+          });
+      });
+    }
+    else
+      console.log("not found");
+  });
