@@ -43,9 +43,9 @@ nightmare
                 scale: "fill"
               })
               .then(() => {
-                fs.unlink(uniq + ext, () => {
+                //fs.unlink(uniq + ext, () => {
                   console.log("done !");
-                });
+                //});
               });
           });
       });
