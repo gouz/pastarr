@@ -1,55 +1,68 @@
 #!/usr/bin/env node
 "use strict";
-const program = require("commander");
-program
-  .version("0.0.6")
-  .parse(process.argv);
-
-const fs = require("fs");
-const request = require("request");
+const program   = require("commander");
+const fs        = require("fs");
+const request   = require("request");
 const wallpaper = require("wallpaper");
 const Nightmare = require("nightmare");
-let nightmare = Nightmare();
+const homedir   = require("homedir");
 
-const search = process.argv[2];
+program
+  .version("0.0.7")
+  .usage('[options] search')
+  .option('-W, --width <n>', 'width of the screen', 1920, parseInt)
+  .option('-H, --height <n>', 'height of the screen', 1080, parseInt)
+  .action((search, options) => {
+    let nightmare = Nightmare();
+    let url = "https://www.google.fr/search?q="
+            + encodeURI(search)
+            + "&biw=1366&bih=658&tbm=isch&source=lnt&tbs=photo,isz:ex,iszw:"
+            + options.width
+            + ",iszh:"
+            + options.height;
 
-let url = "https://www.google.fr/search?q="
-        + encodeURI(search)
-        + "&biw=1366&bih=658&tbm=isch&source=lnt&tbs=photo,isz:ex,iszw:1920,iszh:1080";
-
-nightmare
-  .goto(url)
-  .wait("a.rg_l")
-  .evaluate(() => {
-    const arr = document.querySelectorAll("a.rg_l");
-    arr[Math.floor(Math.random() * arr.length)].click();
-  })
-  .wait(".irc_fsl[tabindex=\"0\"]")
-  .evaluate(() => {
-    return document.querySelector(".irc_fsl[tabindex=\"0\"]").getAttribute("href");
-  })
-  .end()
-  .then((img) => {
-    if (img != "")
-    {
-      const ext = img.substring(img.lastIndexOf("."));
-      const uniq = (new Date()).getTime();
-      request.head(img, (err, res, body) => {
-        request(img)
-          .pipe(fs.createWriteStream(uniq + ext))
-          .on("close", () => {
-            wallpaper
-              .set(uniq + ext, {
-                scale: "fill"
-              })
-              .then(() => {
-                //fs.unlink(uniq + ext, () => {
-                  console.log("done !");
-                //});
+    nightmare
+      .goto(url)
+      .wait("a.rg_l")
+      .evaluate(() => {
+        const arr = document.querySelectorAll("a.rg_l");
+        arr[Math.floor(Math.random() * arr.length)].click();
+      })
+      .wait(".irc_fsl[tabindex=\"0\"]")
+      .evaluate(() => {
+        return document.querySelector(".irc_fsl[tabindex=\"0\"]").getAttribute("href");
+      })
+      .end()
+      .then((img) => {
+        if (img != "")
+        {
+          const path = homedir() + '/pastarr/';
+          try {
+            fs.accessSync(path);
+          } catch (e) {
+            fs.mkdirSync(path);
+          }
+          const ext = img.substring(img.lastIndexOf("."));
+          const uniq = (new Date()).getTime();
+          request.head(img, (err, res, body) => {
+            request(img)
+              .pipe(fs.createWriteStream(path + uniq + ext))
+              .on("close", () => {
+                wallpaper
+                  .set(path + uniq + ext, {
+                    scale: "fill"
+                  })
+                  .then(() => {
+                    //fs.unlink(uniq + ext, () => {
+                      console.log("done !");
+                    //});
+                  });
               });
           });
+        }
+        else
+          console.log("not found");
       });
-    }
-    else
-      console.log("not found");
-  });
+
+  })
+  .parse(process.argv);
