@@ -1,6 +1,6 @@
 {
   "name": "pastarr",
-  "version": "0.0.7",
+  "version": "0.0.9",
   "description": "desktop app to change wallpaper with random images from hashtag and site",
   "main": "index.js",
   "keywords": [
@@ -10,8 +10,10 @@
   "license": "MIT",
   "dependencies": {
     "commander": "^2.9.0",
+    "file-type": "^5.2.0",
     "homedir": "^0.6.0",
     "nightmare": "^2.10.0",
+    "read-chunk": "^2.0.0",
     "wallpaper": "^2.4.0"
   },
   "bin": {

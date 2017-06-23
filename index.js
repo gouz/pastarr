@@ -6,9 +6,11 @@ const request   = require("request");
 const wallpaper = require("wallpaper");
 const Nightmare = require("nightmare");
 const homedir   = require("homedir");
+const fileType  = require('file-type');
+const readChunk = require('read-chunk');
 
 program
-  .version("0.0.7")
+  .version("0.0.9")
   .usage('[options] search')
   .option('-W, --width <n>', 'width of the screen', 1920, parseInt)
   .option('-H, --height <n>', 'height of the screen', 1080, parseInt)
@@ -48,15 +50,18 @@ program
             request(img)
               .pipe(fs.createWriteStream(path + uniq + ext))
               .on("close", () => {
-                wallpaper
-                  .set(path + uniq + ext, {
-                    scale: "fill"
-                  })
-                  .then(() => {
-                    //fs.unlink(uniq + ext, () => {
-                      console.log("done !");
-                    //});
-                  });
+                const buffer = readChunk.sync(path + uniq + ext, 0, 4100);
+                let ft = fileType(buffer);
+                if (ft.ext == 'jpg' || ft.ext == 'png')
+                  wallpaper
+                    .set(path + uniq + ext, {
+                      scale: "fill"
+                    })
+                    .then(() => {
+                      console.log("done ! (" + path + uniq + ext + ")");
+                    });
+                else
+                  console.log('error while downloading, please retry')
               });
           });
         }
