@@ -10,7 +10,7 @@ const fileType  = require('file-type');
 const readChunk = require('read-chunk');
 
 program
-  .version("0.0.9")
+  .version("0.0.10")
   .usage('[options] search')
   .option('-W, --width <n>', 'width of the screen', 1920, parseInt)
   .option('-H, --height <n>', 'height of the screen', 1080, parseInt)
@@ -52,7 +52,7 @@ program
               .on("close", () => {
                 const buffer = readChunk.sync(path + uniq + ext, 0, 4100);
                 let ft = fileType(buffer);
-                if (ft.ext == 'jpg' || ft.ext == 'png')
+                if (ft && (ft.ext == 'jpg' || ft.ext == 'png'))
                   wallpaper
                     .set(path + uniq + ext, {
                       scale: "fill"
