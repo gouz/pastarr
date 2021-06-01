@@ -1,73 +1,61 @@
 #!/usr/bin/env node
-"use strict";
-const program   = require("commander");
-const fs        = require("fs");
-const request   = require("request");
+const { chromium } = require("playwright");
+
+const fs = require("fs");
+const request = require("request");
 const wallpaper = require("wallpaper");
-const Nightmare = require("nightmare");
-const homedir   = require("homedir");
-const fileType  = require('file-type');
-const readChunk = require('read-chunk');
+const homedir = require("homedir");
+const readChunk = require("read-chunk");
+const program = require("commander");
 
 program
-  .version("0.0.10")
-  .usage('[options] search')
-  .option('-W, --width <n>', 'width of the screen', 1920, parseInt)
-  .option('-H, --height <n>', 'height of the screen', 1080, parseInt)
+  .version("0.1.0")
+  .usage("[options] search")
+  .option("-W, --width <n>", "width of the screen", 1920, parseInt)
+  .option("-H, --height <n>", "height of the screen", 1080, parseInt)
   .action((search, options) => {
-    let nightmare = Nightmare();
-    let url = "https://www.google.fr/search?q="
-            + encodeURI(search)
-            + "&biw=1366&bih=658&tbm=isch&source=lnt&tbs=photo,isz:ex,iszw:"
-            + options.width
-            + ",iszh:"
-            + options.height;
-
-    nightmare
-      .goto(url)
-      .wait("a.rg_l")
-      .evaluate(() => {
-        const arr = document.querySelectorAll("a.rg_l");
+    (async () => {
+      const browser = await chromium.launch();
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      let url =
+        "https://www.google.fr/search?q=" +
+        encodeURI(`${search} imagesize:${options.width}x${options.height}`) +
+        "&tbm=isch&source=hp&biw=1920&bih=983";
+      await page.goto(url);
+      await page.evaluate(() => {
+        const arr = document.querySelectorAll("a.wXeWr");
         arr[Math.floor(Math.random() * arr.length)].click();
-      })
-      .wait(".irc_fsl[tabindex=\"0\"]")
-      .evaluate(() => {
-        return document.querySelector(".irc_fsl[tabindex=\"0\"]").getAttribute("href");
-      })
-      .end()
-      .then((img) => {
-        if (img != "")
-        {
-          const path = homedir() + '/pastarr/';
-          try {
-            fs.accessSync(path);
-          } catch (e) {
-            fs.mkdirSync(path);
-          }
-          const ext = img.substring(img.lastIndexOf("."));
-          const uniq = (new Date()).getTime();
-          request.head(img, (err, res, body) => {
-            request(img)
-              .pipe(fs.createWriteStream(path + uniq + ext))
-              .on("close", () => {
-                const buffer = readChunk.sync(path + uniq + ext, 0, 4100);
-                let ft = fileType(buffer);
-                if (ft && (ft.ext == 'jpg' || ft.ext == 'png'))
-                  wallpaper
-                    .set(path + uniq + ext, {
-                      scale: "fill"
-                    })
-                    .then(() => {
-                      console.log("done ! (" + path + uniq + ext + ")");
-                    });
-                else
-                  console.log('error while downloading, please retry')
-              });
-          });
-        }
-        else
-          console.log("not found");
       });
-
+      await page.waitForSelector('a[rlhc="1"]');
+      const img = await page.evaluate(() => {
+        return document.querySelector('a[rlhc="1"] img').getAttribute("src");
+      });
+      if (img.startsWith("http")) {
+        const path = homedir() + "/pastarr/";
+        try {
+          fs.accessSync(path);
+        } catch (e) {
+          fs.mkdirSync(path);
+        }
+        const ext = ".png";
+        const uniq = new Date().getTime();
+        request.head(img, (err, res, body) => {
+          request(img)
+            .pipe(fs.createWriteStream(path + uniq + ext))
+            .on("close", () => {
+              readChunk.sync(path + uniq + ext, 0, 4100);
+              wallpaper
+                .set(path + uniq + ext, {
+                  scale: "fill",
+                })
+                .then(() => {
+                  console.log("done ! (" + path + uniq + ext + ")");
+                });
+            });
+        });
+      } else console.log("not found");
+      await browser.close();
+    })();
   })
   .parse(process.argv);
