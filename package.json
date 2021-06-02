@@ -1,6 +1,6 @@
 {
   "name": "pastarr",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "desktop app to change wallpaper with random images from hashtag",
   "main": "index.js",
   "keywords": [
@@ -12,6 +12,7 @@
     "commander": "^6.2.1",
     "homedir": "^0.6.0",
     "node-fetch": "^2.6.1",
+    "playwright": "^1.11.1",
     "wallpaper": "^2.4.0"
   },
   "bin": {
@@ -24,8 +25,5 @@
   "bugs": {
     "url": "https://github.com/gouz/pastarr/issues"
   },
-  "homepage": "https://github.com/gouz/pastarr#readme",
-  "devDependencies": {
-    "playwright": "^1.11.1"
-  }
+  "homepage": "https://github.com/gouz/pastarr#readme"
 }
