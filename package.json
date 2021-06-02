@@ -1,7 +1,7 @@
 {
   "name": "pastarr",
-  "version": "0.1.0",
-  "description": "desktop app to change wallpaper with random images from hashtag and site",
+  "version": "0.1.1",
+  "description": "desktop app to change wallpaper with random images from hashtag",
   "main": "index.js",
   "keywords": [
     "wallpaper"
@@ -11,8 +11,7 @@
   "dependencies": {
     "commander": "^6.2.1",
     "homedir": "^0.6.0",
-    "read-chunk": "^3.2.0",
-    "request": "^2.88.2",
+    "node-fetch": "^2.6.1",
     "wallpaper": "^2.4.0"
   },
   "bin": {
