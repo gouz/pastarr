@@ -8,7 +8,7 @@ const homedir = require("homedir");
 const { program } = require("commander");
 
 program
-  .version("0.1.1")
+  .version("0.1.2")
   .requiredOption("-S, --search <s>", "search")
   .option("-W, --width <n>", "width of the screen")
   .option("-H, --height <n>", "height of the screen")
@@ -38,6 +38,7 @@ program
   const img = await page.evaluate(() => {
     return document.querySelector('a[rlhc="1"] img').getAttribute("src");
   });
+  await page.waitForTimeout(1000);
   if (img.startsWith("http")) {
     const path = homedir() + "/pastarr/";
     try {
