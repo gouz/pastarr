@@ -8,7 +8,7 @@ const homedir = require("homedir");
 const { program } = require("commander");
 
 program
-  .version("0.1.2")
+  .version("0.1.3")
   .requiredOption("-S, --search <s>", "search")
   .option("-W, --width <n>", "width of the screen")
   .option("-H, --height <n>", "height of the screen")
@@ -35,10 +35,10 @@ program
     arr[Math.floor(Math.random() * arr.length)].click();
   });
   await page.waitForSelector('a[rlhc="1"]');
+  await page.waitForTimeout(1000);
   const img = await page.evaluate(() => {
     return document.querySelector('a[rlhc="1"] img').getAttribute("src");
   });
-  await page.waitForTimeout(1000);
   if (img.startsWith("http")) {
     const path = homedir() + "/pastarr/";
     try {
@@ -51,13 +51,15 @@ program
     fetch(img).then((res) => {
       const dest = fs.createWriteStream(path + uniq + ext);
       res.body.pipe(dest);
-      wallpaper
-        .set(path + uniq + ext, {
-          scale: "fill",
-        })
-        .then(() => {
-          console.log("done ! (" + path + uniq + ext + ")");
-        });
+      res.body.on("end", () => {
+        wallpaper
+          .set(path + uniq + ext, {
+            scale: "fill",
+          })
+          .then(() => {
+            console.log("done ! (" + path + uniq + ext + ")");
+          });
+      });
     });
   } else console.log("not found");
   await browser.close();
