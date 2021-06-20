@@ -1,6 +1,6 @@
 {
   "name": "pastarr",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "desktop app to change wallpaper with random images from hashtag",
   "main": "index.js",
   "keywords": [
@@ -12,7 +12,7 @@
     "base64-to-image": "^1.0.2",
     "commander": "^6.2.1",
     "homedir": "^0.6.0",
-    "nightmare": "^3.0.2",
+    "nightmare": "^2.8.0",
     "node-fetch": "^2.6.1",
     "wallpaper": "^2.4.0"
   },
