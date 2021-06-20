@@ -1,6 +1,6 @@
 {
   "name": "pastarr",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "desktop app to change wallpaper with random images from hashtag",
   "main": "index.js",
   "keywords": [

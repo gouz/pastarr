@@ -12,7 +12,7 @@ const { program } = require("commander");
 const { config } = require("./config.json");
 
 program
-  .version("0.3.0")
+  .version("0.3.1")
   .usage("[options]")
   .description("replace your wallpaper from CLI", {
     options: "options like search, width, height or origin",
