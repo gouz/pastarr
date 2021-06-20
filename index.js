@@ -1,107 +1,125 @@
 #!/usr/bin/env node
-const { chromium } = require("playwright");
+const Nightmare = require("nightmare");
+const nightmare = Nightmare({ show: false });
 
 const fs = require("fs");
 const fetch = require("node-fetch");
 const wallpaper = require("wallpaper");
 const homedir = require("homedir");
+const base64ToImage = require('base64-to-image');
 const { program } = require("commander");
 
-let origins = ["google", "deviantart", "unsplash"];
+const { config } = require("./config.json");
 
 program
-  .version("0.2.0")
-  .requiredOption("-S, --search <s>", "search")
-  .option("-W, --width <n>", "width of the screen")
-  .option("-H, --height <n>", "height of the screen")
-  .option("-O, --origin <n>", `website to scrap [${origins.join(", ")}]`)
+  .version("0.3.0")
+  .usage("[options]")
+  .description("replace your wallpaper from CLI", {
+    options: "options like search, width, height or origin",
+  })
+  .requiredOption(
+    "-S, --search <query>",
+    "subject of the wallpaper you want",
+    ""
+  )
+  .option("-W, --width <n>", "width of the screen", 1920, parseInt)
+  .option("-H, --height <n>", "height of the screen", 1080, parseInt)
+  .option(
+    "-O, --origin <site>",
+    `website to scrap [${Object.keys(config).join(", ")}]`,
+    "google"
+  )
   .parse();
 
-(async () => {
-  const search = program.opts().search;
-  const width = program.opts().width ? parseInt(program.opts().width) : 1920;
-  const height = program.opts().height ? parseInt(program.opts().height) : 1200;
-  const origin =
-    !program.opts().origin || origins.indexOf(program.opts().origin) == -1
-      ? "google"
-      : program.opts().origin;
-  const browser = await chromium.launch();
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  const urls = {
-    google: `https://www.google.fr/search?q=${encodeURI(
-      search + "imagesize:" + width + "x" + height
-    )}&tbm=isch&source=hp&biw=1920&bih=983`,
-    deviantart: `https://www.deviantart.com/search?q=wallpaper%20${encodeURI(
-      search + " " + width + "x" + height
-    )}`,
-    unsplash: `https://unsplash.com/s/photos/${encodeURI(
-      search
-    )}?orientation=landscape`,
-  };
-  const first_step = {
-    google: "a.wXeWr",
-    deviantart: 'a[data-hook="deviation_link"]',
-    unsplash: 'a[itemprop="contentUrl"] img',
-  };
-  const final_step = {
-    google: 'a[rlhc="1"] img',
-    deviantart: 'div[data-hook="art_stage"] img',
-    unsplash: null,
-  };
-  const methods = {
-    unsplash: "srcset",
-  };
-  let url = urls[origin];
-  await page.goto(url);
-  let img;
-  if (final_step[origin] != null) {
-    await page.evaluate(
-      ({ first_step, origin }) => {
-        const arr = document.querySelectorAll(first_step[origin]);
+const options = program.opts();
+if ("" == options.search)
+  program.help();
+else {
+  const origin = options.origin;
+  let url = config[origin].url;
+  let query = config[origin].search;
+  query = query.replace(/_search_/i, options.search);
+  query = query.replace(/_width_/i, options.width);
+  query = query.replace(/_height_/i, options.height);
+  url = url.replace(/_query_/i, encodeURI(query));
+  nightmare
+    .goto(url)
+    .wait(config[origin].first_step)
+    .evaluate(
+      (config, origin) => {
+        const arr = document.querySelectorAll(config[origin].first_step);
         arr[Math.floor(Math.random() * arr.length)].click();
       },
-      { first_step, origin }
-    );
-    await page.waitForSelector(final_step[origin]);
-    await page.waitForTimeout(1000);
-    img = await page.evaluate(
-      ({ final_step, origin }) => {
-        return document.querySelector(final_step[origin]).getAttribute("src");
-      },
-      { final_step, origin }
-    );
-  } else {
-    img = await page.evaluate(
-      ({ first_step, origin }) => {
-        const arr = document.querySelectorAll(first_step[origin]);
-        return arr[Math.floor(Math.random() * arr.length)].srcset;
-      },
-      { first_step, origin }
-    );
-  }
-  if (img.startsWith("http")) {
-    const path = homedir() + "/pastarr/";
-    try {
-      fs.accessSync(path);
-    } catch (e) {
-      fs.mkdirSync(path);
-    }
-    const ext = ".png";
-    const uniq = new Date().getTime();
-    fetch(img).then((res) => {
-      const dest = fs.createWriteStream(path + uniq + ext);
-      res.body.pipe(dest);
-      res.body.on("end", () => {
+      config,
+      origin
+    )
+    .wait(2000)
+    .then(() => {
+      if (null == config[origin].final_step) {
+        return nightmare.evaluate(
+          (config, origin) => {
+            const arr = document.querySelectorAll(config[origin].first_step);
+            if ("srcset" == config[origin].method)
+              return arr[Math.floor(Math.random() * arr.length)].srcset;
+            return "";
+          },
+          config,
+          origin
+        );
+      } else {
+        return nightmare.wait(config[origin].final_step).evaluate(
+          (config, origin) => {
+            return document
+              .querySelector(config[origin].final_step)
+              .getAttribute("src");
+          },
+          config,
+          origin
+        );
+      }
+    })
+    .then((img) => {
+      const path = homedir() + "/pastarr/";
+      try {
+        fs.accessSync(path);
+      } catch (e) {
+        fs.mkdirSync(path);
+      }
+      const ext = ".png";
+      const uniq = new Date().getTime();
+      if (img.startsWith("http")) {
+        fetch(img).then((res) => {
+          const dest = fs.createWriteStream(path + uniq + ext);
+          res.body.pipe(dest);
+          res.body.on("end", () => {
+            wallpaper
+              .set(path + uniq + ext, {
+                scale: "fill",
+                screen: 'all'
+              })
+              .then(() => {
+                console.log("done ! (" + path + uniq + ext + ")");
+                process.exit(1);
+              });
+          });
+        });
+      } else {
+        base64ToImage(img, path, {
+          fileName: uniq,
+          type: 'png'
+        });
         wallpaper
           .set(path + uniq + ext, {
             scale: "fill",
+            screen: 'main'
           })
           .then(() => {
             console.log("done ! (" + path + uniq + ext + ")");
+            process.exit(1);
           });
-      });
+      }
+    })
+    .then(() => {
+      nightmare.end;
     });
-  } else console.log("not found");
-  await browser.close();
-})();
+}

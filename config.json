@@ -1,0 +1,23 @@
+{
+  "config": {
+    "google": {
+      "url": "https://www.google.fr/search?q=_query_&tbm=isch&source=hp&biw=1920&bih=983",
+      "search": "_search_ imagesize:_width_x_height_",
+      "first_step": "a.wXeWr",
+      "final_step": "a[rlhc=\"1\"] img"
+    },
+    "deviantart": {
+      "url": "https://www.deviantart.com/search?q=wallpaper%20_query_",
+      "search": "_search_ _width_x_height_",
+      "first_step": "a[data-hook=\"deviation_link\"]",
+      "final_step": "div[data-hook=\"art_stage\"] img"
+    },
+    "unsplash": {
+      "url": "https://unsplash.com/s/photos/_query_?orientation=landscape",
+      "search": "_search_",
+      "first_step": "a[itemprop=\"contentUrl\"] img",
+      "final_step": null,
+      "method": "srcset"
+    }
+  }
+}

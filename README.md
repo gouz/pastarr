@@ -7,7 +7,6 @@ Thanks to https://github.com/sindresorhus/wallpaper pastarr is cross-platform (w
 ## installation
 
 ```
-$ npm install -g playwright
 $ npm install -g pastarr
 ```
 

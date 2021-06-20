@@ -1,6 +1,6 @@
 {
   "name": "pastarr",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "desktop app to change wallpaper with random images from hashtag",
   "main": "index.js",
   "keywords": [
@@ -9,10 +9,11 @@
   "author": "Sylvain Gougouzian",
   "license": "MIT",
   "dependencies": {
+    "base64-to-image": "^1.0.2",
     "commander": "^6.2.1",
     "homedir": "^0.6.0",
+    "nightmare": "^3.0.2",
     "node-fetch": "^2.6.1",
-    "playwright": "^1.11.1",
     "wallpaper": "^2.4.0"
   },
   "bin": {
