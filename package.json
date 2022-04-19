@@ -14,7 +14,7 @@
     "homedir": "^0.6.0",
     "nightmare": "^2.8.0",
     "node-fetch": "^3.1.1",
-    "wallpaper": "^2.4.0"
+    "wallpaper": "^6.0.0"
   },
   "bin": {
     "pastarr": "./index.js"
