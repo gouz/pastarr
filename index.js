@@ -3,31 +3,29 @@ import { program } from "commander";
 import base64ToImage from "base64-to-image";
 import { setWallpaper } from "wallpaper";
 import axios from "axios";
-import cheerio from "cheerio";
+import * as cheerio from "cheerio";
 import homedir from "homedir";
 import fs from "fs";
+import { isGeneratorFunction } from "util/types";
 
 const config = {
   /*
   google: {
     url: "https://www.google.fr/search?q=_query_&tbm=isch&source=hp&biw=1920&bih=983",
     search: "_search_ imagesize:_width_x_height_",
-    first_step: ".e3goi a",
-    final_step: 'a[rlhc="1"] img',
-  },
-  deviantart: {
-    url: "https://www.deviantart.com/search?q=wallpaper%20_query_",
-    search: "_search_ _width_x_height_",
-    first_step: 'a[data-hook="deviation_link"]',
-    final_step: 'div[data-hook="art_stage"] img',
+    steps: [".e3goi a", 'a[rlhc="1"] img'],
   },
   */
   unsplash: {
     url: "https://unsplash.com/s/photos/_query_?orientation=landscape",
     search: "_search_",
-    first_step: 'a[itemprop="contentUrl"] img',
-    final_step: null,
+    steps: ['a[itemprop="contentUrl"] img'],
     method: "srcset",
+  },
+  deviantart: {
+    url: "https://www.deviantart.com/search?q=wallpaper%20_query_",
+    search: "_search_ _width_x_height_",
+    steps: ['a[data-hook="deviation_link"]', 'div[data-hook="art_stage"] img'],
   },
 };
 
@@ -49,24 +47,7 @@ program
   .description("replace your wallpaper from CLI")
   .parse();
 
-const options = program.opts();
-if ("" == options.search) program.help();
-else {
-  const origin = options.origin;
-  let url = config[origin].url;
-  let query = config[origin].search;
-  query = query.replace(/_search_/i, options.search);
-  query = query.replace(/_width_/i, options.width);
-  query = query.replace(/_height_/i, options.height);
-  url = url.replace(/_query_/i, encodeURI(query));
-  const { data } = await axios.get(url);
-  const $ = cheerio.load(data);
-  const arr = [];
-  $(config[origin].first_step).each((_idx, el) => {
-    if ("srcset" == config[origin].method) arr.push(el.attribs.srcset);
-    else arr.push(el.attribs.href);
-  });
-  const img = arr[Math.floor(Math.random() * arr.length)];
+const defineWallpaper = (img) => {
   const path = homedir() + "/pastarr/";
   try {
     fs.accessSync(path);
@@ -105,4 +86,42 @@ else {
       process.exit(1);
     });
   }
+};
+
+const doStep = ($, i, nbStep, origin) => {
+  const arr = [];
+  $(config[origin].steps[i]).each((_idx, el) => {
+    if (i == nbStep) {
+      if ("srcset" == config[origin].method) {
+        arr.push(el.attribs.srcset);
+      } else {
+        arr.push(el.attribs.src);
+      }
+    } else arr.push(el.attribs.href);
+  });
+  const link = arr[Math.floor(Math.random() * arr.length)];
+  if (i == nbStep) {
+    defineWallpaper(link);
+  } else {
+    axios.get(link).then(({ data }) => {
+      const $ = cheerio.load(data);
+      doStep($, i + 1, nbStep, origin);
+    });
+  }
+};
+
+const options = program.opts();
+if ("" == options.search) program.help();
+else {
+  const origin = options.origin;
+  let url = config[origin].url;
+  let query = config[origin].search;
+  query = query.replace(/_search_/i, options.search);
+  query = query.replace(/_width_/i, options.width);
+  query = query.replace(/_height_/i, options.height);
+  url = url.replace(/_query_/i, encodeURI(query));
+  const { data } = await axios.get(url);
+  const $ = cheerio.load(data);
+  const nbStep = config[origin].steps.length - 1;
+  doStep($, 0, nbStep, origin);
 }
