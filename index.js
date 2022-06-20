@@ -27,12 +27,6 @@ const config = {
     steps: ['a[data-hook="deviation_link"]', 'div[data-hook="art_stage"] img'],
     method: "src",
   },
-  // pixabay: {
-  //   url: "https://pixabay.com/images/search/_query_&",
-  //   search: "_search_/?min_width=_width_&min_height=_height_",
-  //   steps: [".results--efirA a.link--h3bPW", "#media_container img"],
-  //   method: "srcset",
-  // },
 };
 
 program
@@ -59,6 +53,16 @@ const axiosHeaders = {
   "Accept-Language": "fr-FR,fr;q=0.8,en-US;q=0.5,en;q=0.3",
 };
 
+const applyWallpaper = (path) => {
+  setWallpaper(path, {
+    scale: "fill",
+    screen: "all",
+  }).then(() => {
+    console.log("done ! (" + path + ")");
+    process.exit(1);
+  });
+};
+
 const defineWallpaper = (img) => {
   const path = homedir() + "/pastarr/";
   try {
@@ -77,13 +81,7 @@ const defineWallpaper = (img) => {
     }).then((res) => {
       res.data.pipe(fs.createWriteStream(path + uniq + ext));
       res.data.on("end", () => {
-        setWallpaper(path + uniq + ext, {
-          scale: "fill",
-          screen: "all",
-        }).then(() => {
-          console.log("done ! (" + path + uniq + ext + ")");
-          process.exit(1);
-        });
+        applyWallpaper(path + uniq + ext);
       });
     });
   } else {
@@ -91,13 +89,7 @@ const defineWallpaper = (img) => {
       fileName: uniq,
       type: "png",
     });
-    setWallpaper(path + uniq + ext, {
-      scale: "fill",
-      screen: "main",
-    }).then(() => {
-      console.log("done ! (" + path + uniq + ext + ")");
-      process.exit(1);
-    });
+    applyWallpaper(path + uniq + ext);
   }
 };
 
