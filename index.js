@@ -9,13 +9,12 @@ import fs from "fs";
 import { isGeneratorFunction } from "util/types";
 
 const config = {
-  /*
   google: {
-    url: "https://www.google.fr/search?q=_query_&tbm=isch&source=hp&biw=1920&bih=983",
+    url: "https://www.google.com/search?q=_query_&tbm=isch&source=hp&biw=1920&bih=983&dpr=1",
     search: "_search_ imagesize:_width_x_height_",
-    steps: [".e3goi a", 'a[rlhc="1"] img'],
+    steps: ["a.wXeWr img"],
+    method: "data-src",
   },
-  */
   unsplash: {
     url: "https://unsplash.com/s/photos/_query_?orientation=landscape",
     search: "_search_",
@@ -26,7 +25,14 @@ const config = {
     url: "https://www.deviantart.com/search?q=wallpaper%20_query_",
     search: "_search_ _width_x_height_",
     steps: ['a[data-hook="deviation_link"]', 'div[data-hook="art_stage"] img'],
+    method: "src",
   },
+  // pixabay: {
+  //   url: "https://pixabay.com/images/search/_query_&",
+  //   search: "_search_/?min_width=_width_&min_height=_height_",
+  //   steps: [".results--efirA a.link--h3bPW", "#media_container img"],
+  //   method: "srcset",
+  // },
 };
 
 program
@@ -47,6 +53,12 @@ program
   .description("replace your wallpaper from CLI")
   .parse();
 
+const axiosHeaders = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:101.0) Gecko/20100101 Firefox/101.0",
+  "Accept-Language": "fr-FR,fr;q=0.8,en-US;q=0.5,en;q=0.3",
+};
+
 const defineWallpaper = (img) => {
   const path = homedir() + "/pastarr/";
   try {
@@ -61,6 +73,7 @@ const defineWallpaper = (img) => {
       method: "get",
       url: img,
       responseType: "stream",
+      headers: axiosHeaders,
     }).then((res) => {
       res.data.pipe(fs.createWriteStream(path + uniq + ext));
       res.data.on("end", () => {
@@ -92,10 +105,10 @@ const doStep = ($, i, nbStep, origin) => {
   const arr = [];
   $(config[origin].steps[i]).each((_idx, el) => {
     if (i == nbStep) {
-      if ("srcset" == config[origin].method) {
-        arr.push(el.attribs.srcset);
+      if (el.attribs.alt.startsWith("http")) {
+        arr.push(el.attribs.alt);
       } else {
-        arr.push(el.attribs.src);
+        arr.push(el.attribs[config[origin].method]);
       }
     } else arr.push(el.attribs.href);
   });
@@ -103,10 +116,12 @@ const doStep = ($, i, nbStep, origin) => {
   if (i == nbStep) {
     defineWallpaper(link);
   } else {
-    axios.get(link).then(({ data }) => {
-      const $ = cheerio.load(data);
-      doStep($, i + 1, nbStep, origin);
-    });
+    axios({ url: link, method: "get", headers: axiosHeaders }).then(
+      ({ data }) => {
+        const $ = cheerio.load(data);
+        doStep($, i + 1, nbStep, origin);
+      }
+    );
   }
 };
 
@@ -120,7 +135,11 @@ else {
   query = query.replace(/_width_/i, options.width);
   query = query.replace(/_height_/i, options.height);
   url = url.replace(/_query_/i, encodeURI(query));
-  const { data } = await axios.get(url);
+  const { data } = await axios({
+    url: url,
+    method: "get",
+    headers: axiosHeaders,
+  });
   const $ = cheerio.load(data);
   const nbStep = config[origin].steps.length - 1;
   doStep($, 0, nbStep, origin);
