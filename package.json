@@ -9,16 +9,20 @@
   "author": "Sylvain Gougouzian",
   "license": "MIT",
   "dependencies": {
+    "axios": "^0.27.2",
     "base64-to-image": "^1.0.2",
-    "commander": "^6.2.1",
+    "cheerio": "1.0.0-rc.11",
+    "commander": "^9.3.0",
     "homedir": "^0.6.0",
-    "nightmare": "^2.8.0",
-    "node-fetch": "^3.1.1",
-    "wallpaper": "^2.4.0"
+    "wallpaper": "^6.1.1"
   },
   "bin": {
     "pastarr": "./index.js"
   },
+  "engines": {
+    "node": ">=12"
+  },
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gouz/pastarr.git"
