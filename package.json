@@ -9,7 +9,7 @@
   "author": "Sylvain Gougouzian",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.27.2",
+    "axios": "^1.6.0",
     "base64-to-image": "^1.0.2",
     "cheerio": "1.0.0-rc.11",
     "commander": "^9.3.0",
